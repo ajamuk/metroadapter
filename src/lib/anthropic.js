@@ -25,8 +25,9 @@ ${workout}`
   })
 
   const raw = response.content[0].text
+  const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
   try {
-    return { ok: true, data: JSON.parse(raw) }
+    return { ok: true, data: JSON.parse(cleaned) }
   } catch {
     return { ok: false, raw }
   }

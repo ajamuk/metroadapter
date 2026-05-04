@@ -12,12 +12,12 @@ export default function App() {
 
   const [workout, setWorkout] = useState('')
   const [tempInstructions, setTempInstructions] = useState('')
-  const [outputState, setOutputState] = useState({ status: 'idle', data: null, rawError: null })
+  const [outputState, setOutputState] = useState({ status: 'idle', text: null, rawError: null })
   const [memoryModalOpen, setMemoryModalOpen] = useState(false)
 
   function handleSelectCenter(id) {
     setActiveCenterId(id)
-    setOutputState({ status: 'idle', data: null, rawError: null })
+    setOutputState({ status: 'idle', text: null, rawError: null })
   }
 
   function handleAddCenter(name) {
@@ -27,7 +27,7 @@ export default function App() {
 
   async function handleAdapt() {
     if (!workout.trim() || outputState.status === 'loading') return
-    setOutputState({ status: 'loading', data: null, rawError: null })
+    setOutputState({ status: 'loading', text: null, rawError: null })
     try {
       const result = await adaptWOD({
         centerName: activeCenter.name,
@@ -35,13 +35,9 @@ export default function App() {
         tempInstructions,
         workout,
       })
-      if (result.ok) {
-        setOutputState({ status: 'done', data: result.data, rawError: null })
-      } else {
-        setOutputState({ status: 'error', data: null, rawError: result.raw })
-      }
+      setOutputState({ status: 'done', text: result.text, rawError: null })
     } catch (err) {
-      setOutputState({ status: 'error', data: null, rawError: err?.message ?? String(err) })
+      setOutputState({ status: 'error', text: null, rawError: err?.message ?? String(err) })
     }
   }
 

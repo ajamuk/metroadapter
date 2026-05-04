@@ -1,27 +1,16 @@
 import { useState, useEffect } from 'react'
 
-function buildText(data, centerName) {
-  return [
-    `━━━ ${centerName?.toUpperCase() ?? 'CENTRO'} — ENTRENAMIENTO ADAPTADO ━━━\n${data.workout_adaptado}`,
-    `━━━ BRIEFING — PASOS DEL COACH ━━━\n${data.pasos_briefing}`,
-    `━━━ RESOUND PLAN — PARTE 1 ━━━\n${data.resound_plan_parte1}`,
-    `━━━ RESOUND PLAN — PARTE 2 ━━━\n${data.resound_plan_parte2}`,
-  ].join('\n\n')
-}
-
 export default function OutputPanel({ center, state }) {
-  const { status, data, rawError } = state
-  const [text, setText] = useState('')
+  const { status, text, rawError } = state
+  const [editableText, setEditableText] = useState('')
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    if (status === 'done' && data) {
-      setText(buildText(data, center?.name))
-    }
-  }, [status, data, center?.name])
+    if (status === 'done' && text) setEditableText(text)
+  }, [status, text])
 
   function handleCopy() {
-    navigator.clipboard.writeText(text).then(() => {
+    navigator.clipboard.writeText(editableText).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
     })
@@ -82,7 +71,7 @@ export default function OutputPanel({ center, state }) {
         </div>
       )}
 
-      {status === 'done' && data && (
+      {status === 'done' && (
         <div className="flex-1 flex flex-col min-h-0 p-4 gap-2">
           <div className="flex items-center justify-between flex-shrink-0">
             <span
@@ -107,8 +96,8 @@ export default function OutputPanel({ center, state }) {
             </button>
           </div>
           <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
+            value={editableText}
+            onChange={(e) => setEditableText(e.target.value)}
             className="flex-1 w-full text-sm leading-relaxed"
             style={{
               fontFamily: 'JetBrains Mono',

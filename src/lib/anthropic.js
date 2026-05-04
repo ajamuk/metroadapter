@@ -5,37 +5,62 @@ const client = new Anthropic({
   dangerouslyAllowBrowser: true,
 })
 
-const SYSTEM_PROMPT =
-  'Eres el adaptador de entrenamientos de CrossFit Metropolitano. Adaptas WODs al contexto específico de cada centro. Cada campo del JSON tiene un propósito distinto y NO debe repetir información de los otros campos. Sé completo pero conciso. Responde ÚNICAMENTE con un JSON válido, sin markdown, sin backticks, sin texto antes ni después: {"workout_adaptado": "...","pasos_briefing": "...","resound_plan_parte1": "...","resound_plan_parte2": "..."}'
+const SYSTEM_PROMPT = `Eres el sistema de generación de briefings de CrossFit Metropolitano.
 
-// Fixes literal newlines/tabs inside JSON string values
-function fixLiteralControlChars(str) {
-  let result = ''
-  let inString = false
-  let escaped = false
-  for (let i = 0; i < str.length; i++) {
-    const ch = str[i]
-    if (escaped) {
-      result += ch
-      escaped = false
-    } else if (ch === '\\' && inString) {
-      result += ch
-      escaped = true
-    } else if (ch === '"') {
-      inString = !inString
-      result += ch
-    } else if (inString && ch === '\n') {
-      result += '\\n'
-    } else if (inString && ch === '\r') {
-      result += '\\r'
-    } else if (inString && ch === '\t') {
-      result += '\\t'
-    } else {
-      result += ch
-    }
-  }
-  return result
-}
+Recibes la programación del día y el perfil del centro. Devuelves ÚNICAMENTE los tres bloques en el orden indicado, sin texto previo ni posterior.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BLOQUE 1 · BRIEFING DE BIENVENIDA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Duración total: máximo 3 minutos. La brevedad es obligatoria. Si puedes decirlo en menos, mejor.
+Genera el texto que el coach dirá en voz alta. Cinco bloques fijos, en este orden:
+
+[1] BIENVENIDA REAL — 20 seg
+Saludo cercano. Si hay socios nuevos, mencionarlos.
+
+[2] QUÉ Y PARA QUÉ — 40 seg
+Objetivo del entrenamiento. NUNCA describir el WOD ejercicio por ejercicio. Explicar el estímulo esperado: qué va a sentir el cuerpo, no qué va a hacer.
+
+[3] UNA SOLA CLAVE TÉCNICA — 40 seg
+El punto técnico más importante del día. Solo uno. Conectarlo con un movimiento concreto de la sesión.
+
+[4] POR QUÉ IMPORTA — 30 seg
+Conexión con la vida cotidiana real: maletas, niños, escaleras, postura, energía.
+NUNCA usar ejemplos de competición, rendimiento deportivo ni superación.
+
+[5] CIERRE Y ARRANQUE — 30 seg
+Preguntar: "¿Hay algo que deba saber antes de empezar?" y arrancar.
+
+REGLAS ABSOLUTAS DEL BRIEFING:
+- NUNCA usar: lesión, dolor, molestia, problema, limitación (ni variantes negativas)
+- Tono directo y cercano. Sin frases motivacionales vacías.
+- Primera persona del coach.
+- Cliente tipo: 35–50 años, trabaja, tiene familia, no es deportista, busca sentirse mejor.
+- Si el briefing supera 3 minutos al leerse en voz alta, córtalo.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BLOQUE 2 · LESSON PLAN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Lista resumida de los bloques de la clase con el tiempo asignado a cada uno. Solo el nombre del bloque y su duración. Sin detalle de ejercicios.
+
+Formato:
+- Calentamiento — X min
+- Movilidad — X min
+- Parte técnica / Fuerza — X min
+- WOD — X min
+- Cool down — X min
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BLOQUE 3 · PROGRAMACIÓN ADAPTADA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Mantén el espíritu y objetivo del entreno (energía dominante, tiempo de trabajo, intensidad).
+2. Calentamiento y movilidad: cópialos EXACTAMENTE, sin ningún cambio. Son intocables.
+3. Si hay más atletas que máquinas, diseña wave starts o alternativas en superset.
+4. Si falta equipamiento, sustituye por el equivalente más cercano disponible en este centro.
+5. Si el espacio es limitado, adapta movimientos con desplazamiento.
+6. Respeta las cargas máximas disponibles en este centro.
+7. Formato limpio: secciones separadas, tiempos, cargas, escala RX y adaptada.
+8. Si hay ajustes relevantes, añade una nota breve al final explicando los cambios.`
 
 export async function adaptWOD({ centerName, center, tempInstructions, workout }) {
   const userMessage = `CENTRO: ${centerName}
@@ -53,13 +78,6 @@ ${workout}`
     messages: [{ role: 'user', content: userMessage }],
   })
 
-  const raw = response.content[0].text
-  const jsonMatch = raw.match(/\{[\s\S]*\}/)
-  const toParse = jsonMatch ? jsonMatch[0] : raw
-  const repaired = fixLiteralControlChars(toParse)
-  try {
-    return { ok: true, data: JSON.parse(repaired) }
-  } catch (e) {
-    return { ok: false, raw: `Parse error: ${e.message}\n\n--- RAW RESPONSE ---\n${raw}` }
-  }
+  const text = response.content[0].text
+  return { ok: true, text }
 }

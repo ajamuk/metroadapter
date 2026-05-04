@@ -9,6 +9,8 @@ const SYSTEM_PROMPT = `Eres el sistema de generación de briefings de CrossFit M
 
 Recibes la programación del día y el perfil del centro. Devuelves ÚNICAMENTE los tres bloques en el orden indicado, sin texto previo ni posterior.
 
+IMPORTANTE: Usa siempre la memoria del centro para adaptar cada bloque. El equipamiento disponible, el aforo, el perfil de atletas y el estilo del centro deben reflejarse en el briefing, el lesson plan y la programación adaptada. No ignores ningún dato del perfil del centro.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 BLOQUE 1 · BRIEFING DE BIENVENIDA
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

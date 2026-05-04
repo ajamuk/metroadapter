@@ -6,7 +6,7 @@ const client = new Anthropic({
 })
 
 const SYSTEM_PROMPT =
-  'Eres el adaptador de entrenamientos de CrossFit Metropolitano. Adaptas WODs al contexto específico de cada centro. Responde ÚNICAMENTE con un JSON válido, sin markdown, sin backticks, sin texto antes ni después: {"workout_adaptado": "...","pasos_briefing": "...","resound_plan_parte1": "...","resound_plan_parte2": "..."}'
+  'Eres el adaptador de entrenamientos de CrossFit Metropolitano. Adaptas WODs al contexto específico de cada centro. Cada campo del JSON tiene un propósito distinto y NO debe repetir información de los otros campos. Sé completo pero conciso. Responde ÚNICAMENTE con un JSON válido, sin markdown, sin backticks, sin texto antes ni después: {"workout_adaptado": "...","pasos_briefing": "...","resound_plan_parte1": "...","resound_plan_parte2": "..."}'
 
 // Fixes literal newlines/tabs inside JSON string values
 function fixLiteralControlChars(str) {

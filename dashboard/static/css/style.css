@@ -1,0 +1,87 @@
+/* ── Variables ──────────────────────────────────────────────── */
+:root {
+  --accent:    #E8650A;
+  --accent-lt: rgba(232, 101, 10, 0.15);
+  --card-bg:   #1a1a1a;
+  --card-border: rgba(255,255,255,0.08);
+}
+
+/* ── Base ───────────────────────────────────────────────────── */
+body {
+  background: #111;
+  color: #e0e0e0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Login ──────────────────────────────────────────────────── */
+.login-body { background: radial-gradient(ellipse at 50% 0%, #1a1a2e 0%, #111 70%); }
+.login-card  { background: #1a1a1a; border: 1px solid var(--card-border); }
+.brand-icon-lg { font-size: 3rem; filter: drop-shadow(0 0 12px var(--accent)); }
+
+/* ── Navbar ─────────────────────────────────────────────────── */
+.navbar { border-color: var(--card-border) !important; }
+.brand-icon { font-size: 1.4rem; filter: drop-shadow(0 0 6px var(--accent)); }
+
+/* ── Cards ──────────────────────────────────────────────────── */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+}
+
+/* ── KPI Cards ──────────────────────────────────────────────── */
+.kpi-card {
+  position: relative;
+  overflow: hidden;
+  transition: border-color .2s, transform .2s;
+}
+.kpi-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.kpi-icon  { font-size: 1.5rem; margin-bottom: .25rem; }
+.kpi-label { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: #888; margin-bottom: .15rem; }
+.kpi-value { font-size: 1.7rem; font-weight: 700; line-height: 1; }
+.kpi-sub   { font-size: .72rem; color: #999; margin-top: .25rem; }
+
+/* ── Section titles ─────────────────────────────────────────── */
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  border-bottom: 1px solid var(--accent-lt);
+  padding-bottom: .5rem;
+}
+
+/* ── Tables ─────────────────────────────────────────────────── */
+.table-dark { --bs-table-bg: transparent; }
+.table > :not(caption) > * > * { padding: .45rem .75rem; }
+
+/* ── Center badge colors ────────────────────────────────────── */
+.badge-parla    { background: #3b82f6; }
+.badge-lasrosas { background: #10b981; }
+.badge-getafe   { background: #f59e0b; }
+
+.dot-parla    { display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b82f6;margin-right:5px; }
+.dot-lasrosas { display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;margin-right:5px; }
+.dot-getafe   { display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;margin-right:5px; }
+
+/* ── Tarifa table ───────────────────────────────────────────── */
+.tarifa-card .table th { white-space: nowrap; }
+.tarifa-badge { font-size: .65rem; vertical-align: middle; }
+
+/* ── Servicio mini-card ─────────────────────────────────────── */
+.servicio-bar { height: 6px; border-radius: 3px; background: var(--accent); }
+
+/* ── Chart.js global defaults ───────────────────────────────── */
+canvas { display: block; }
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #111; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 576px) {
+  .kpi-value { font-size: 1.3rem; }
+  h2 { font-size: 1.3rem; }
+}

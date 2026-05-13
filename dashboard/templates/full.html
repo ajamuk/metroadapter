@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Detalle — CrossFit MPO{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 pb-5">
+
+  <div id="loadingState" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p class="mt-3 text-muted">Cargando datos…</p>
+  </div>
+
+  <div id="dashContent" style="display:none">
+
+    <!-- Header + filtros -->
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-3">
+      <h2 class="fw-bold mb-0">Vista Detalle</h2>
+      <div class="d-flex gap-2 flex-wrap align-items-center">
+        <!-- Centro selector -->
+        <div class="btn-group btn-group-sm" role="group" id="centerFilter">
+          <button class="btn btn-primary center-btn" data-center="ALL">Todos</button>
+          <button class="btn btn-outline-secondary center-btn" data-center="PARLA">Parla</button>
+          <button class="btn btn-outline-secondary center-btn" data-center="LAS ROSAS">Las Rosas</button>
+          <button class="btn btn-outline-secondary center-btn" data-center="GETAFE">Getafe</button>
+        </div>
+        <!-- Año selector -->
+        <select id="yearSelect" class="form-select form-select-sm w-auto bg-dark border-secondary text-white"></select>
+      </div>
+    </div>
+
+    <!-- Sección: Financiero -->
+    <h5 class="section-title mt-4 mb-3"><i class="bi bi-currency-euro"></i> Financiero</h5>
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-xl-8">
+        <div class="card p-3">
+          <h6 class="fw-semibold mb-3">Facturación mensual (€)</h6>
+          <div style="height:260px"><canvas id="chartFactMensual"></canvas></div>
+        </div>
+      </div>
+      <div class="col-12 col-xl-4">
+        <div class="card p-3">
+          <h6 class="fw-semibold mb-3">Gasto medio por socio (€/mes)</h6>
+          <div style="height:260px"><canvas id="chartGasto"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-md-6">
+        <div class="card p-3">
+          <h6 class="fw-semibold mb-3">Facturación anual total</h6>
+          <div style="height:220px"><canvas id="chartFactAnual"></canvas></div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="card p-3">
+          <h6 class="fw-semibold mb-3">Lifetime Value (€)</h6>
+          <div style="height:220px"><canvas id="chartLTV"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección: Socios -->
+    <h5 class="section-title mt-4 mb-3"><i class="bi bi-people"></i> Socios</h5>
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-xl-6">
+        <div class="card p-3">
+          <h6 class="fw-semibold mb-3">Clientes activos por mes</h6>
+          <div style="height:240px"><canvas id="chartClientesMes"></canvas></div>
+        </div>
+      </div>
+      <div class="col-12 col-xl-6">
+        <div class="card p-3">
+          <h6 class="fw-semibold mb-3">Altas mensuales</h6>
+          <div style="height:240px"><canvas id="chartAltas"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-md-6">
+        <div class="card p-3">
+          <h6 class="fw-semibold mb-3">Bajas mensuales (nº)</h6>
+          <div style="height:220px"><canvas id="chartBajas"></canvas></div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="card p-3">
+          <h6 class="fw-semibold mb-3">Tasa de baja mensual (%)</h6>
+          <div style="height:220px"><canvas id="chartBajasPct"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-md-6">
+        <div class="card p-3">
+          <h6 class="fw-semibold mb-3">Permanencia media (meses)</h6>
+          <div style="height:200px"><canvas id="chartPermanencia"></canvas></div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="card p-3 h-100">
+          <h6 class="fw-semibold mb-3">KPIs socios — resumen anual</h6>
+          <div class="table-responsive">
+            <table class="table table-dark table-sm mb-0 align-middle" id="tablaSocios">
+              <thead class="table-secondary">
+                <tr>
+                  <th>Centro</th><th class="text-end">Clientes</th>
+                  <th class="text-end">Altas/mes</th><th class="text-end">Bajas/mes</th>
+                  <th class="text-end">Baja %</th><th class="text-end">Perm.</th>
+                </tr>
+              </thead>
+              <tbody id="tablaSociosBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección: Clases -->
+    <h5 class="section-title mt-4 mb-3"><i class="bi bi-activity"></i> Ocupación de Clases</h5>
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-xl-8">
+        <div class="card p-3">
+          <h6 class="fw-semibold mb-3">Ocupación mensual (%)</h6>
+          <div style="height:260px"><canvas id="chartOcupacion"></canvas></div>
+        </div>
+      </div>
+      <div class="col-12 col-xl-4">
+        <div class="card p-3">
+          <h6 class="fw-semibold mb-3">Evolución media anual (%)</h6>
+          <div style="height:260px"><canvas id="chartOcupacionAnual"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección: Servicios adicionales -->
+    <h5 class="section-title mt-4 mb-3"><i class="bi bi-grid-fill"></i> Servicios Adicionales</h5>
+    <div class="row g-3 mb-4" id="serviciosCards"></div>
+
+    <!-- Sección: Tarifas -->
+    <h5 class="section-title mt-4 mb-3"><i class="bi bi-tags-fill"></i> Tarifas</h5>
+    <div class="row g-3 mb-4" id="tarifasContainer"></div>
+
+  </div><!-- /dashContent -->
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/full.js') }}"></script>
+{% endblock %}

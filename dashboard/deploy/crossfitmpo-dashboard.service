@@ -1,0 +1,22 @@
+[Unit]
+Description=CrossFit MPO Dashboard (Gunicorn)
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/crossfitmpo-dashboard
+Environment="SECRET_KEY=CAMBIA_ESTO_POR_UN_VALOR_ALEATORIO_SEGURO"
+ExecStart=/opt/crossfitmpo-dashboard/venv/bin/gunicorn \
+    --workers 2 \
+    --bind 127.0.0.1:5050 \
+    --timeout 60 \
+    --access-logfile /var/log/crossfitmpo-dashboard/access.log \
+    --error-logfile  /var/log/crossfitmpo-dashboard/error.log \
+    wsgi:app
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

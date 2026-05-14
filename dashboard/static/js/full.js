@@ -130,17 +130,79 @@ function drawLTV(d) {
   });
 }
 
-// ── Clientes activos mensual ─────────────────────────────────
+// ── Usuarios totales mes a mes por centro ────────────────────
 function drawClientesMes(d) {
   destroyChart('chartClientesMes');
   const centers = activeCenters().filter(c => d.clientes?.[c]?.[selectedYear]);
-  new Chart(document.getElementById('chartClientesMes'), {
+  const canvas = document.getElementById('chartClientesMes');
+  const ctx = canvas.getContext('2d');
+
+  function makeGradient(hex) {
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    const gr = ctx.createLinearGradient(0, 0, 0, 300);
+    gr.addColorStop(0,   `rgba(${r},${g},${b},0.45)`);
+    gr.addColorStop(0.6, `rgba(${r},${g},${b},0.12)`);
+    gr.addColorStop(1,   `rgba(${r},${g},${b},0.01)`);
+    return gr;
+  }
+
+  const datasets = centers.map(c => ({
+    label: c,
+    data: MONTHS.map(m => d.clientes[c][selectedYear][m] ?? null),
+    borderColor: C_COLORS[c],
+    backgroundColor: makeGradient(C_COLORS[c]),
+    borderWidth: 2.5,
+    pointRadius: 0,
+    pointHoverRadius: 6,
+    pointHoverBackgroundColor: C_COLORS[c],
+    pointHoverBorderColor: '#fff',
+    pointHoverBorderWidth: 2,
+    tension: 0.4,
+    fill: 'origin',
+  }));
+
+  if (centers.length > 1) {
+    const totals = MONTHS.map(m => {
+      const vals = centers.map(c => d.clientes[c][selectedYear][m]).filter(v => v != null);
+      return vals.length ? vals.reduce((a, b) => a + b, 0) : null;
+    });
+    datasets.push({
+      label: 'Total',
+      data: totals,
+      borderColor: 'rgba(255,255,255,0.55)',
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderDash: [6, 3],
+      pointRadius: 0,
+      pointHoverRadius: 5,
+      tension: 0.4,
+      fill: false,
+    });
+  }
+
+  new Chart(canvas, {
     type: 'line',
-    data: {
-      labels: MONTHS_ES,
-      datasets: centers.map(c => makeLineDataset(c, MONTHS.map(m => d.clientes[c][selectedYear][m] ?? null), c))
-    },
-    options: chartOpts()
+    data: { labels: MONTHS_ES, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y ?? 0)} socios`
+          }
+        }
+      },
+      scales: {
+        x: {},
+        y: {
+          beginAtZero: false,
+          ticks: { callback: v => fmt(v) }
+        }
+      }
+    }
   });
 }
 

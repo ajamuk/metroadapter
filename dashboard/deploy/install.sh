@@ -827,8 +827,12 @@ cat > "${APP_DIR}/templates/full.html" << 'EOF'
     <div class="row g-3 mb-4">
       <div class="col-12 col-xl-6">
         <div class="card p-3">
-          <h6 class="fw-semibold mb-3">Usuarios totales mes a mes por centro</h6>
-          <div style="height:300px"><canvas id="chartClientesMes"></canvas></div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="fw-semibold mb-0">Usuarios totales mes a mes por centro</h6>
+            <span class="text-muted small" id="clientesMesYoYLabel"></span>
+          </div>
+          <div id="clientesMesKpis" class="d-flex flex-wrap gap-3 mb-3"></div>
+          <div style="height:280px"><canvas id="chartClientesMes"></canvas></div>
         </div>
       </div>
       <div class="col-12 col-xl-6">
@@ -911,6 +915,7 @@ cat > "${APP_DIR}/templates/full.html" << 'EOF'
 <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
 <script src="{{ url_for('static', filename='js/full.js') }}"></script>
 {% endblock %}
+
 EOF
 
 # ── Static assets ────────────────────────────────────────────────────────────
@@ -1492,19 +1497,49 @@ function drawLTV(d) {
 // ── Usuarios totales mes a mes por centro ────────────────────
 function drawClientesMes(d) {
   destroyChart('chartClientesMes');
+  const prevYear = selectedYear - 1;
   const centers = activeCenters().filter(c => d.clientes?.[c]?.[selectedYear]);
   const canvas = document.getElementById('chartClientesMes');
   const ctx = canvas.getContext('2d');
 
-  function makeGradient(hex) {
+  // ── Mini KPI chips per center ─────────────────────────────
+  const kpisEl = document.getElementById('clientesMesKpis');
+  const yoyLabel = document.getElementById('clientesMesYoYLabel');
+  kpisEl.innerHTML = '';
+  const hasPrev = centers.some(c => d.clientes?.[c]?.[prevYear]);
+  if (hasPrev) yoyLabel.textContent = `vs ${prevYear}`;
+  else yoyLabel.textContent = '';
+
+  for (const c of centers) {
+    const cur  = latestVal(d.clientes, c, selectedYear);
+    const prev = latestVal(d.clientes, c, prevYear);
+    const delta = (cur != null && prev != null) ? cur - prev : null;
+    const pct   = (delta != null && prev) ? (delta / prev * 100) : null;
+    const sign  = delta >= 0 ? '+' : '';
+    const color = delta == null ? '' : delta >= 0 ? 'text-success' : 'text-danger';
+    const arrow = delta == null ? '' : delta >= 0 ? '▲' : '▼';
+    kpisEl.insertAdjacentHTML('beforeend', `
+      <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-3" style="background:rgba(255,255,255,0.05)">
+        <span class="${DOT_CLASS[c]}"></span>
+        <div>
+          <div class="fw-bold" style="font-size:1.15rem;line-height:1">${fmt(cur)}</div>
+          <div class="small text-muted" style="font-size:.7rem">${c.replace('LAS ROSAS','L.R.')}</div>
+        </div>
+        ${delta != null ? `<div class="small ${color} ms-1">${arrow} ${sign}${fmt(delta)} <span class="text-muted">(${sign}${fmt(pct,1)}%)</span></div>` : ''}
+      </div>`);
+  }
+
+  // ── Gradient helper ───────────────────────────────────────
+  function makeGradient(hex, alpha0 = 0.45, alpha1 = 0.01) {
     const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-    const gr = ctx.createLinearGradient(0, 0, 0, 300);
-    gr.addColorStop(0,   `rgba(${r},${g},${b},0.45)`);
-    gr.addColorStop(0.6, `rgba(${r},${g},${b},0.12)`);
-    gr.addColorStop(1,   `rgba(${r},${g},${b},0.01)`);
+    const gr = ctx.createLinearGradient(0, 0, 0, 280);
+    gr.addColorStop(0,   `rgba(${r},${g},${b},${alpha0})`);
+    gr.addColorStop(0.6, `rgba(${r},${g},${b},${alpha0 * 0.3})`);
+    gr.addColorStop(1,   `rgba(${r},${g},${b},${alpha1})`);
     return gr;
   }
 
+  // ── Datasets: current year (solid fill) ───────────────────
   const datasets = centers.map(c => ({
     label: c,
     data: MONTHS.map(m => d.clientes[c][selectedYear][m] ?? null),
@@ -1518,8 +1553,30 @@ function drawClientesMes(d) {
     pointHoverBorderWidth: 2,
     tension: 0.4,
     fill: 'origin',
+    order: 2,
   }));
 
+  // ── Datasets: previous year (dashed, no fill) ─────────────
+  for (const c of centers) {
+    if (!d.clientes?.[c]?.[prevYear]) continue;
+    const hex = C_COLORS[c];
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    datasets.push({
+      label: `${c} (${prevYear})`,
+      data: MONTHS.map(m => d.clientes[c][prevYear][m] ?? null),
+      borderColor: `rgba(${r},${g},${b},0.35)`,
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      borderDash: [4, 4],
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      tension: 0.4,
+      fill: false,
+      order: 3,
+    });
+  }
+
+  // ── Total line (current year only) ────────────────────────
   if (centers.length > 1) {
     const totals = MONTHS.map(m => {
       const vals = centers.map(c => d.clientes[c][selectedYear][m]).filter(v => v != null);
@@ -1536,6 +1593,7 @@ function drawClientesMes(d) {
       pointHoverRadius: 5,
       tension: 0.4,
       fill: false,
+      order: 1,
     });
   }
 
@@ -1547,19 +1605,25 @@ function drawClientesMes(d) {
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'top' },
+        legend: {
+          position: 'top',
+          labels: {
+            filter: item => !item.text.includes('('),
+          }
+        },
         tooltip: {
           callbacks: {
-            label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y ?? 0)} socios`
+            label: ctx => {
+              const isPrev = ctx.dataset.label.includes('(');
+              const prefix = isPrev ? '  ' : ' ';
+              return `${prefix}${ctx.dataset.label}: ${fmt(ctx.parsed.y ?? 0)} socios`;
+            }
           }
         }
       },
       scales: {
         x: {},
-        y: {
-          beginAtZero: false,
-          ticks: { callback: v => fmt(v) }
-        }
+        y: { beginAtZero: false, ticks: { callback: v => fmt(v) } }
       }
     }
   });
@@ -1797,6 +1861,7 @@ function chartOpts(extraScales = {}) {
     }
   };
 }
+
 EOF
 
 # ── 4. Download vendor assets from CDN ──────────────────────────────────────
